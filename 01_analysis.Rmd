@@ -1,0 +1,98 @@
+---
+title: "00_analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+### Load the data 
+
+```{r get-data-option-2, echo=TRUE}
+load("/home/u034/mfourman/ccp_data_final.rda")
+```
+
+### Some data cleaning and sorting
+```{r}
+ccp_data %>%  head (10)
+```
+
+
+
+```{r}
+ccp_data_labs <- ccp_data %>%
+  drop_na(daily_lbdat) %>% 
+  drop_na(cestdat) 
+
+ccp_data_labs %>% 
+  distinct(subjid, daily_lbdat) %>% 
+  nrow()
+```
+#Sort the dates into the correct format
+ccp_data_labs <- ccp_data_labs %>%
+  mutate(cestdat = lubridate::ymd(cestdat),
+         daily_lbdat = lubridate::ymd(daily_lbdat)) 
+
+# get rid weird crazy dates from 1918
+ccp_data_labs <- ccp_data_labs %>% 
+  filter(daily_lbdat >= "2020-01-01") %>% 
+  filter(daily_lbdat <= "2022-01-01") %>% 
+  filter(cestdat >= "2020-01-01") %>% 
+  filter(cestdat <= "2022-01-01")
+
+#check that the max and min dates are sensible
+ccp_data_labs %>%
+  summarise(max_lab_date = max(daily_lbdat),
+            min_lab_date = min(daily_lbdat),
+            max_symptom_date = max(cestdat),
+            min_symptom_date = min(cestdat))
+
+ccp_data_labs <- ccp_data_labs %>% 
+  rename(lymphocyte_count = daily_lymp_lborres) %>% 
+  rename(neutrophil_count = daily_neutro_lborres) %>%
+  rename(platelet_count = daily_plt_lborres)
+
+
+# take the difference between the two dates to work out time to symptom onset
+ccp_data_labs <- ccp_data_labs%>% 
+  mutate(lab_day_since_onset = daily_lbdat - cestdat) %>% 
+  mutate(nl_ratio = neutrophil_count/lymphocyte_count) 
+
+ccp_data_labs %>% 
+  select(subjid, daily_lbdat, cestdat, 
+         daily_wbc_lborres, lymphocyte_count, neutrophil_count, 
+         platelet_count) %>% 
+  missing_glimpse()
+
+ccp_data_labs %>% 
+  distinct(subjid, daily_lbdat) %>% 
+  nrow()
+
+
+  
+
+# Create a smaller table whilst working on these graphs
+ccp_blood_data <- ccp_data_labs %>%
+  select(subjid, cestdat, daily_lbdat, lab_day_since_onset, nl_ratio, 
+         daily_wbc_lborres, lymphocyte_count, neutrophil_count, 
+         platelet_count, severity2) 
+
+#pivot longer for easier graphing
+ccp_blood_data_long <- ccp_blood_data %>%
+  pivot_longer(c(nl_ratio, 
+                 daily_wbc_lborres, lymphocyte_count, neutrophil_count, 
+                 platelet_count), 
+               names_to = "assay", 
+               values_to = "value")
+
+#add a numeric column with day difference
+ccp_blood_data_long <- ccp_blood_data_long %>% 
+  mutate(onset_to_lab = as.numeric(lab_day_since_onset))
+
+#check that the above code worked
+ccp_blood_data_long %>%
+  select(onset_to_lab, lab_day_since_onset)
+  head()
+```
+

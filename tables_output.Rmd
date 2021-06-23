@@ -1,0 +1,33 @@
+---
+title: "Example knitr/R Markdown document"
+author: "Max F"
+date: "8/04/2020"
+output:
+  word_document:
+    reference_docx: template.docx  
+---
+
+```{r setup, include=FALSE}
+# Load data into global environment. 
+library(finalfit)
+library(dplyr)
+library(knitr)
+load("out.rda")
+```
+
+
+## Table 1 - Baseline characteristics and admission FBC parameters of all patients on day 1
+```{r table1, echo = FALSE, results='asis'}
+kable(t1, row.names=FALSE, align=c("l", "l", "r", "r", "r", "r"))
+```
+
+## Table 2 - Detailed characteristics of COVID patients on day 1
+```{r table2, echo = FALSE, results='asis'}
+kable(t2, row.names=FALSE, align=c("l", "l", "r", "r", "r", "r"))
+```
+
+## Table 3 - Baseline characteristics and admission FBC parameters of all patients on day 1
+```{r table3, echo = FALSE, results='asis'}
+kable(t3, row.names=FALSE, align=c("l", "l", "r", "r", "r", "r"))
+
+```
